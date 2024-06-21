@@ -124,7 +124,7 @@ export const verifyOtp = async (req: Request, res: Response) => {
             return res.status(401).json({
                 message: "User email does not exist"
             });
-            
+
         }
 
         if (user.verified) {
@@ -165,4 +165,37 @@ export const verifyOtp = async (req: Request, res: Response) => {
         });
     }
 };
+
+export const reSendOtp = async (req: Request, res: Response) => {
+
+    try {
+        const { email } = req.body;
+        console.log(email)
+        const user: any = await User.findOne({ email });
+        if (!user) {
+            return res.status(401).send({ message: "email not exists in Data Base" });
+        }
+        const now = new Date();
+        const fifteenMinutesAgo = new Date(now.getTime() - 15 * 60 * 1000);
+
+        if (user?.updatedAt > fifteenMinutesAgo) {
+            res.status(403).json({
+                message: "Last OTP is still valid try after 15 min"
+            });
+            return;
+        }
+        const otp = generateOTP()
+        await User.updateOne({ email }, { otp })
+        sendMail({ email, token: "not vaild option", otp });
+        res.status(200).send({ message: `mail has been sent to the email Id ${email}` });
+    }
+    catch (error) {
+        console.error(error);
+        res.status(500).json({
+            message: "Something went wrong"
+        });
+    }
+};
+
+
 

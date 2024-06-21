@@ -38,5 +38,13 @@ router.get('/email/verification',
 );
 
 
+router.post('/resendotp',
+    [
+        body('email').exists().withMessage('email is required'),
+    ],
+    authControllers.reSendOtp
+);
+
+
 
 export default router;
