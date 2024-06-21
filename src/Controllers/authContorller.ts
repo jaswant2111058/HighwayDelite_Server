@@ -2,11 +2,17 @@ import { Request, Response, NextFunction } from 'express';
 import bcrypt from 'bcrypt';
 import jwt, { TokenExpiredError } from 'jsonwebtoken';
 import User, { IUser } from '../Models/User';
-import sendMail from '../utils/mailLinkSender';
+import sendMail from '../Utils/mailLinkSender';
 import { generateOTP } from '../Utils/otpGenrater';
 
 
 // -------------- authControllers --------------
+
+const hashPassword = async (password: string): Promise<string> => {
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+    return hashedPassword;
+};
 
 export const login = async (req: Request, res: Response) => {
     try {
@@ -50,7 +56,7 @@ export const signup = async (req: Request, res: Response) => {
         const { first_name, last_name, email, password } = req.body;
         const preEmail = await User.findOne({ email });
         if (preEmail) {
-            res.send({ message: "email already exists" });
+            res.status(403).send({ message: "email already exists" });
         } else {
             const token = jwt.sign({ password: password }, process.env.JWT_SECRET as string, {
                 expiresIn: `${1000 * 60 * 5}`
@@ -82,7 +88,7 @@ export const verifySave = async (req: Request, res: Response) => {
     try {
         const token = req.query.token as string;
         const email = req.query.email as string;
-        const password = jwt.verify(token, process.env.JWT_SECRET as string) as { password: string };
+        const password: any = jwt.verify(token, process.env.JWT_SECRET as string) as { password: string };
         const user = await User.findOne({ email });
         if (!user) {
             return res.status(401).json({
@@ -110,23 +116,22 @@ export const verifySave = async (req: Request, res: Response) => {
 };
 
 
-export const verifyOtp = async (req: Request, res: Response): Promise<void> => {
+export const verifyOtp = async (req: Request, res: Response) => {
     const { otp, email } = req.body;
-
     try {
         const user: any = await User.findOne({ email });
         if (!user) {
-            res.status(401).json({
+            return res.status(401).json({
                 message: "User email does not exist"
             });
-            return;
+            
         }
 
         if (user.verified) {
-            res.status(402).json({
+            return res.status(403).json({
                 message: "User account already verified"
             });
-            return;
+
         }
 
         const now = new Date();
@@ -150,7 +155,9 @@ export const verifyOtp = async (req: Request, res: Response): Promise<void> => {
             { email },
             { $set: { verified: true } }
         );
-
+        return res.status(200).json({
+            message: "account Verified successfuly"
+        });
     } catch (error) {
         console.error(error);
         res.status(500).json({

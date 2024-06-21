@@ -13,8 +13,7 @@ dotenv.config();
 // Import routes
 
 
-// import indexRouter from './routes/index';
-// import authRouter from './routes/user';
+ import authRouter from './Routes/authRouter';
 
 
 // Initialize Express app
@@ -38,8 +37,7 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Route setup
-// app.use('/', indexRouter);
-// app.use('/', authRouter);
+ app.use('/', authRouter);
 
 
 // Function to get local IPv4 address

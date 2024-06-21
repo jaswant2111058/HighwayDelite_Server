@@ -1,6 +1,11 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt, { TokenExpiredError } from 'jsonwebtoken';
-import User from '../Models/User'; // Adjust the path based on your project structure
+import User from '../Models/User';
+
+
+
+
+
 
 export const authMiddleware = async (req: Request, res: Response, next: NextFunction) => {
     try {
